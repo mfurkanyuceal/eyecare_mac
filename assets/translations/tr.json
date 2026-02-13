@@ -1,0 +1,22 @@
+{
+  "app": {
+    "name": "EyeCare Mac"
+  },
+  "notification": {
+    "breakTitle": "Göz Molası Zamanı! 👁️",
+    "breakMessage": "20 saniye boyunca 6 metre uzağa bakın.",
+    "breakCompleteTitle": "Mola Bitti!",
+    "breakCompleteMessage": "Yeni çalışma periyodu başladı. Gözlerinize iyi bakın!"
+  },
+  "menu": {
+    "start": "Başlat",
+    "stop": "Durdur",
+    "exit": "Çıkış",
+    "remaining": "Kalan"
+  },
+  "status": {
+    "idle": "⏸️ Beklemede",
+    "working": "💼 Çalışıyor: {time}",
+    "breaking": "👁️ Mola: {time}"
+  }
+}

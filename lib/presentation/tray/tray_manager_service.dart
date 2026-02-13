@@ -2,7 +2,8 @@ import 'dart:io';
 
 import 'package:tray_manager/tray_manager.dart';
 
-import '../../core/constants/app_constants.dart';
+import '../../core/localization/locale_keys.dart';
+import '../../core/localization/localization_service.dart';
 import '../../domain/entities/timer_session.dart';
 import '../bloc/eye_care_bloc.dart';
 import '../bloc/eye_care_event.dart';
@@ -13,13 +14,14 @@ import '../bloc/eye_care_event.dart';
 /// Listens to BLoC state changes to update the menu dynamically.
 class TrayManagerService with TrayListener {
   final EyeCareBloc _bloc;
+  final LocalizationService _localizationService;
 
   static const String _menuIdStart = 'start';
   static const String _menuIdStop = 'stop';
   static const String _menuIdStatus = 'status';
   static const String _menuIdExit = 'exit';
 
-  TrayManagerService(this._bloc);
+  TrayManagerService(this._bloc, this._localizationService);
 
   /// Initialize the tray icon and menu
   Future<void> init() async {
@@ -67,13 +69,19 @@ class TrayManagerService with TrayListener {
     String statusText;
     switch (session.phase) {
       case TimerPhase.idle:
-        statusText = '⏸️ Beklemede';
+        statusText = _localizationService.tr(LocaleKeys.statusIdle);
         break;
       case TimerPhase.working:
-        statusText = '💼 Çalışıyor: ${session.formattedTime}';
+        statusText = _localizationService.tr(
+          LocaleKeys.statusWorking,
+          args: {'time': session.formattedTime},
+        );
         break;
       case TimerPhase.breaking:
-        statusText = '👁️ Mola: ${session.formattedTime}';
+        statusText = _localizationService.tr(
+          LocaleKeys.statusBreaking,
+          args: {'time': session.formattedTime},
+        );
         break;
     }
 
@@ -86,11 +94,17 @@ class TrayManagerService with TrayListener {
     // Start/Stop based on state
     if (session.phase == TimerPhase.idle) {
       menuItems.add(
-        MenuItem(key: _menuIdStart, label: '▶️ ${AppConstants.menuStart}'),
+        MenuItem(
+          key: _menuIdStart,
+          label: '▶️ ${_localizationService.tr(LocaleKeys.menuStart)}',
+        ),
       );
     } else {
       menuItems.add(
-        MenuItem(key: _menuIdStop, label: '⏹️ ${AppConstants.menuStop}'),
+        MenuItem(
+          key: _menuIdStop,
+          label: '⏹️ ${_localizationService.tr(LocaleKeys.menuStop)}',
+        ),
       );
     }
 
@@ -98,7 +112,10 @@ class TrayManagerService with TrayListener {
 
     // Exit
     menuItems.add(
-      MenuItem(key: _menuIdExit, label: '❌ ${AppConstants.menuExit}'),
+      MenuItem(
+        key: _menuIdExit,
+        label: '❌ ${_localizationService.tr(LocaleKeys.menuExit)}',
+      ),
     );
 
     final menu = Menu(items: menuItems);

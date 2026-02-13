@@ -1,0 +1,22 @@
+{
+  "app": {
+    "name": "EyeCare Mac"
+  },
+  "notification": {
+    "breakTitle": "Eye Break Time! 👁️",
+    "breakMessage": "Look at something 20 feet (6 meters) away for 20 seconds.",
+    "breakCompleteTitle": "Break Over!",
+    "breakCompleteMessage": "New work period started. Take care of your eyes!"
+  },
+  "menu": {
+    "start": "Start",
+    "stop": "Stop",
+    "exit": "Exit",
+    "remaining": "Remaining"
+  },
+  "status": {
+    "idle": "⏸️ Idle",
+    "working": "💼 Working: {time}",
+    "breaking": "👁️ Break: {time}"
+  }
+}

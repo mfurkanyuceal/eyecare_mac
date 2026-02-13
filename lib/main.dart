@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'core/localization/localization_service.dart';
 import 'injection_container.dart';
 import 'presentation/bloc/eye_care_bloc.dart';
 import 'presentation/tray/tray_manager_service.dart';
@@ -15,11 +16,12 @@ void main() async {
   // Initialize dependency injection
   await initDependencies();
 
-  // Get the BLoC instance
+  // Get the BLoC and localization service instances
   final eyeCareBloc = sl<EyeCareBloc>();
+  final localizationService = sl<LocalizationService>();
 
   // Initialize tray manager
-  final trayService = TrayManagerService(eyeCareBloc);
+  final trayService = TrayManagerService(eyeCareBloc, localizationService);
   await trayService.init();
 
   // Run a minimal app (no visible UI, just tray)

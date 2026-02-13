@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/localization/locale_keys.dart';
+import '../../core/localization/localization_service.dart';
 import '../../domain/entities/timer_session.dart';
 import '../../domain/usecases/send_break_notification.dart';
 import '../../domain/usecases/start_timer.dart';
@@ -20,6 +22,7 @@ class EyeCareBloc extends Bloc<EyeCareEvent, EyeCareState> {
   final StartTimerUseCase _startTimerUseCase;
   final StopTimerUseCase _stopTimerUseCase;
   final SendBreakNotificationUseCase _sendBreakNotificationUseCase;
+  final LocalizationService _localizationService;
 
   StreamSubscription<int>? _timerSubscription;
 
@@ -27,9 +30,11 @@ class EyeCareBloc extends Bloc<EyeCareEvent, EyeCareState> {
     required StartTimerUseCase startTimerUseCase,
     required StopTimerUseCase stopTimerUseCase,
     required SendBreakNotificationUseCase sendBreakNotificationUseCase,
+    required LocalizationService localizationService,
   }) : _startTimerUseCase = startTimerUseCase,
        _stopTimerUseCase = stopTimerUseCase,
        _sendBreakNotificationUseCase = sendBreakNotificationUseCase,
+       _localizationService = localizationService,
        super(
          EyeCareInitial(
            TimerSession.initial(
@@ -107,8 +112,8 @@ class EyeCareBloc extends Bloc<EyeCareEvent, EyeCareState> {
 
     // Send break notification
     await _sendBreakNotificationUseCase(
-      title: AppConstants.notificationTitle,
-      message: AppConstants.notificationMessage,
+      title: _localizationService.tr(LocaleKeys.notificationBreakTitle),
+      message: _localizationService.tr(LocaleKeys.notificationBreakMessage),
     );
 
     // Start break timer
@@ -135,8 +140,8 @@ class EyeCareBloc extends Bloc<EyeCareEvent, EyeCareState> {
 
     // Notify user break is complete
     await _sendBreakNotificationUseCase(
-      title: AppConstants.breakCompleteTitle,
-      message: AppConstants.breakCompleteMessage,
+      title: _localizationService.tr(LocaleKeys.notificationBreakCompleteTitle),
+      message: _localizationService.tr(LocaleKeys.notificationBreakCompleteMessage),
     );
 
     // Restart work timer

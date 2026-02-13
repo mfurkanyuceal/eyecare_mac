@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 
+import 'core/localization/localization_service.dart';
 import 'data/repositories/notification_repository_impl.dart';
 import 'data/repositories/timer_repository_impl.dart';
 import 'domain/repositories/notification_repository.dart';
@@ -21,6 +22,13 @@ final sl = GetIt.instance;
 /// 4. Use cases
 /// 5. BLoCs
 Future<void> initDependencies() async {
+  // ==================== Core Services ====================
+
+  // Localization Service
+  final localizationService = LocalizationService();
+  await localizationService.init();
+  sl.registerLazySingleton<LocalizationService>(() => localizationService);
+
   // ==================== Repositories ====================
 
   // Notification Repository
@@ -48,6 +56,7 @@ Future<void> initDependencies() async {
       startTimerUseCase: sl<StartTimerUseCase>(),
       stopTimerUseCase: sl<StopTimerUseCase>(),
       sendBreakNotificationUseCase: sl<SendBreakNotificationUseCase>(),
+      localizationService: sl<LocalizationService>(),
     ),
   );
 }
