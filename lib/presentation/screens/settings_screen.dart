@@ -5,7 +5,7 @@ import '../../core/services/auto_launch_service.dart';
 
 /// Settings screen for customizing timer durations
 class SettingsScreen extends StatefulWidget {
-  final VoidCallback onClose;
+  final void Function({required bool durationChanged}) onClose;
 
   const SettingsScreen({super.key, required this.onClose});
 
@@ -20,6 +20,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late bool _showCounter;
   late bool _launchAtLogin;
   bool _isLoading = true;
+
+  // Track initial values to detect changes
+  late int _initialWorkMinutes;
+  late int _initialWorkSeconds;
+  late int _initialBreakSeconds;
 
   @override
   void initState() {
@@ -37,7 +42,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _showCounter = prefs.getBool('show_counter') ?? true;
       _launchAtLogin = isLaunchEnabled;
       _isLoading = false;
+
+      // Store initial values
+      _initialWorkMinutes = _workMinutes;
+      _initialWorkSeconds = _workSeconds;
+      _initialBreakSeconds = _breakSeconds;
     });
+  }
+
+  bool _hasDurationChanged() {
+    return _workMinutes != _initialWorkMinutes ||
+        _workSeconds != _initialWorkSeconds ||
+        _breakSeconds != _initialBreakSeconds;
+  }
+
+  void _closeWithChangeCheck() {
+    _saveSettings();
+    widget.onClose(durationChanged: _hasDurationChanged());
   }
 
   Future<void> _saveSettings() async {
@@ -73,7 +94,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Row(
                   children: [
                     IconButton(
-                      onPressed: widget.onClose,
+                      onPressed: () => _closeWithChangeCheck(),
                       icon: const Icon(Icons.close, color: Colors.white70),
                     ),
                     const SizedBox(width: 8),
@@ -256,7 +277,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           child: ElevatedButton(
                             onPressed: () {
                               _saveSettings();
-                              widget.onClose();
+                              _closeWithChangeCheck();
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.green.shade600,
@@ -281,7 +302,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         // Info text
                         Center(
                           child: Text(
-                            'Changes take effect on next timer start',
+                            'Duration changes will auto-restart running timer',
                             style: TextStyle(
                               color: Colors.white.withOpacity(0.5),
                               fontSize: 12,

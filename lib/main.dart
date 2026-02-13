@@ -195,13 +195,17 @@ class _EyeCareAppState extends State<EyeCareApp> with WindowListener {
     if (navigatorKey.currentState != null) {
       navigatorKey.currentState!.push(
         MaterialPageRoute(
-          builder: (_) => SettingsScreen(onClose: _onCloseSettings),
+          builder: (_) => SettingsScreen(
+            onClose: ({required bool durationChanged}) {
+              _onCloseSettings(durationChanged: durationChanged);
+            },
+          ),
         ),
       );
     }
   }
 
-  void _onCloseSettings() async {
+  void _onCloseSettings({required bool durationChanged}) async {
     _isShowingSettings = false;
 
     // Pop the settings screen
@@ -212,6 +216,18 @@ class _EyeCareAppState extends State<EyeCareApp> with WindowListener {
 
     // Hide window
     await _windowService.hideWindow();
+
+    // Restart timer if duration changed and timer is running
+    if (durationChanged) {
+      final phase = _bloc.state.session.phase;
+      if (phase == TimerPhase.working || phase == TimerPhase.breaking) {
+        print('DEBUG: Duration changed, restarting timer');
+        _bloc.add(const StopTimerEvent());
+        // Small delay to ensure stop completes before restart
+        await Future.delayed(const Duration(milliseconds: 100));
+        _bloc.add(const StartTimerEvent());
+      }
+    }
   }
 
   void _onBreakComplete() async {
