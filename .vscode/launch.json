@@ -1,0 +1,48 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "eyecare_mac (macOS)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "-d",
+        "macos"
+      ]
+    },
+    {
+      "name": "eyecare_mac (macOS) - Debug",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "-d",
+        "macos",
+        "--debug"
+      ]
+    },
+    {
+      "name": "eyecare_mac (macOS) - Profile",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "-d",
+        "macos",
+        "--profile"
+      ]
+    },
+    {
+      "name": "eyecare_mac (macOS) - Release",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "-d",
+        "macos",
+        "--release"
+      ]
+    }
+  ]
+}
