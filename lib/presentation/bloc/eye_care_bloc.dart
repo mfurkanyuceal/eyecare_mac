@@ -141,7 +141,9 @@ class EyeCareBloc extends Bloc<EyeCareEvent, EyeCareState> {
     // Notify user break is complete
     await _sendBreakNotificationUseCase(
       title: _localizationService.tr(LocaleKeys.notificationBreakCompleteTitle),
-      message: _localizationService.tr(LocaleKeys.notificationBreakCompleteMessage),
+      message: _localizationService.tr(
+        LocaleKeys.notificationBreakCompleteMessage,
+      ),
     );
 
     // Restart work timer

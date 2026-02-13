@@ -1,9 +1,13 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import 'core/localization/localization_service.dart';
 import 'injection_container.dart';
 import 'presentation/bloc/eye_care_bloc.dart';
 import 'presentation/tray/tray_manager_service.dart';
+
+/// Global navigator key for context-free access in tray
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 /// EyeCare Mac - A macOS menu bar app for eye strain prevention
 ///
@@ -12,6 +16,9 @@ import 'presentation/tray/tray_manager_service.dart';
 void main() async {
   // Ensure Flutter bindings are initialized
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize easy_localization
+  await EasyLocalization.ensureInitialized();
 
   // Initialize dependency injection
   await initDependencies();
@@ -24,8 +31,15 @@ void main() async {
   final trayService = TrayManagerService(eyeCareBloc, localizationService);
   await trayService.init();
 
-  // Run a minimal app (no visible UI, just tray)
-  runApp(const EyeCareApp());
+  // Run app with EasyLocalization
+  runApp(
+    EasyLocalization(
+      supportedLocales: const [Locale('en'), Locale('tr')],
+      path: 'assets/translations',
+      fallbackLocale: const Locale('en'),
+      child: const EyeCareApp(),
+    ),
+  );
 }
 
 /// Minimal app widget - no visible UI
@@ -40,9 +54,13 @@ class EyeCareApp extends StatelessWidget {
     // Return a minimal MaterialApp with no home widget
     // The app is entirely controlled via the system tray
     return MaterialApp(
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'EyeCare Mac',
       theme: ThemeData.dark(),
+      localizationsDelegates: context.localizationDelegates,
+      supportedLocales: context.supportedLocales,
+      locale: context.locale,
       home: const SizedBox.shrink(), // Empty widget - no UI
     );
   }
