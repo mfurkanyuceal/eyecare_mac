@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/localization/locale_keys.dart';
@@ -58,16 +59,25 @@ class EyeCareBloc extends Bloc<EyeCareEvent, EyeCareState> {
     // Cancel any existing subscription
     await _timerSubscription?.cancel();
 
-    // Create new session in working phase
-    final newSession = state.session.copyWith(
-      remainingSeconds: state.session.workDuration,
+    // Load saved durations from SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    final workMinutes = prefs.getInt('work_minutes') ?? 20;
+    final workSeconds = prefs.getInt('work_seconds') ?? 0;
+    final breakSeconds = prefs.getInt('break_seconds') ?? 20;
+    final workDurationSeconds = workMinutes * 60 + workSeconds;
+
+    // Create new session in working phase with user-defined durations
+    final newSession = TimerSession(
+      workDuration: workDurationSeconds,
+      breakDuration: breakSeconds,
+      remainingSeconds: workDurationSeconds,
       phase: TimerPhase.working,
     );
 
     emit(EyeCareRunning(newSession));
 
     // Start the countdown
-    _timerSubscription = _startTimerUseCase(state.session.workDuration).listen(
+    _timerSubscription = _startTimerUseCase(workDurationSeconds).listen(
       (remaining) => add(TimerTickEvent(remaining)),
       onDone: () => add(const WorkCompleteEvent()),
     );
@@ -78,6 +88,9 @@ class EyeCareBloc extends Bloc<EyeCareEvent, EyeCareState> {
     StopTimerEvent event,
     Emitter<EyeCareState> emit,
   ) async {
+    print(
+      'DEBUG: _onStopTimer called, subscription=${_timerSubscription != null}',
+    );
     await _timerSubscription?.cancel();
     _timerSubscription = null;
     _stopTimerUseCase();
@@ -87,6 +100,7 @@ class EyeCareBloc extends Bloc<EyeCareEvent, EyeCareState> {
       phase: TimerPhase.idle,
     );
 
+    print('DEBUG: Emitting EyeCareStopped, phase=${newSession.phase}');
     emit(EyeCareStopped(newSession));
   }
 

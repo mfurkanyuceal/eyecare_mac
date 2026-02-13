@@ -11,9 +11,7 @@ class MainFlutterWindow: NSWindow {
     RegisterGeneratedPlugins(registry: flutterViewController)
 
     super.awakeFromNib()
-    
-    // Hide window for tray-only app
-    self.orderOut(nil)
-    self.setIsVisible(false)
+
+    // Window visibility is managed by window_manager package
   }
 }

@@ -35,5 +35,8 @@
     "**/.dart_tool": true,
     "**/ios/Pods": true,
     "**/macos/Pods": true
+  },
+  "chat.tools.terminal.autoApprove": {
+    "flutter": true
   }
 }

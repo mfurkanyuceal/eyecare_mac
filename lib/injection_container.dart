@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
 
 import 'core/localization/localization_service.dart';
+import 'core/services/window_service.dart';
 import 'data/repositories/notification_repository_impl.dart';
 import 'data/repositories/timer_repository_impl.dart';
 import 'domain/repositories/notification_repository.dart';
@@ -28,6 +29,9 @@ Future<void> initDependencies() async {
   final localizationService = LocalizationService();
   await localizationService.init();
   sl.registerLazySingleton<LocalizationService>(() => localizationService);
+
+  // Window Service
+  sl.registerLazySingleton<WindowService>(() => WindowService());
 
   // ==================== Repositories ====================
 

@@ -53,9 +53,15 @@ class TimerRepositoryImpl implements TimerRepository {
 
   @override
   void cancelCountdown() {
+    print(
+      'DEBUG: cancelCountdown called, subscription=${_subscription != null}, controller=${_controller != null}',
+    );
     _subscription?.cancel();
     _subscription = null;
-    _controller?.close();
+    if (_controller != null && !_controller!.isClosed) {
+      _controller!.close();
+    }
     _controller = null;
+    print('DEBUG: cancelCountdown done');
   }
 }

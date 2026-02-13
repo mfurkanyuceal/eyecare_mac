@@ -14,41 +14,73 @@ EyeCare Mac, **20-20-20 kuralına** dayalı bir göz sağlığı uygulamasıdır
 
 > **Her 20 dakikada bir, 20 saniye boyunca 6 metre (20 feet) uzağa bakın.**
 
-Uygulama tamamen macOS menü çubuğunda (System Tray) çalışır ve Dock'ta görünmez. Çalışma sürenizi takip eder ve mola zamanı geldiğinde size native macOS bildirimi gönderir.
+Uygulama tamamen macOS menü çubuğunda (System Tray) çalışır ve Dock'ta görünmez. Çalışma sürenizi takip eder ve mola zamanı geldiğinde güzel bir tam ekran mola penceresi açar.
 
 ---
 
 ## ✨ Özellikler
 
-- 🕐 **20 dakikalık çalışma döngüsü** - Otomatik geri sayım
-- 👁️ **20 saniyelik mola hatırlatıcısı** - Native macOS bildirimleri
-- 🖥️ **Menü çubuğu entegrasyonu** - Dock'ta yer kaplamaz
-- 🔄 **Otomatik döngü** - Mola sonrası otomatik yeniden başlatma
-- ⏯️ **Basit kontroller** - Başlat, Durdur, Çıkış
+- 🕐 **Özelleştirilebilir çalışma süresi** — Dakika ve saniye olarak ayarlanabilir
+- 👁️ **Tam ekran mola penceresi** — Animasyonlu geri sayım ile göz dinlendirme hatırlatıcısı
+- 🖥️ **Menü çubuğu entegrasyonu** — Dock'ta yer kaplamaz, system tray'de yaşar
+- ⏱️ **Canlı geri sayım** — Menü çubuğunda kalan süre anlık gösterilir
+- ⚙️ **Ayarlar ekranı** — Çalışma süresi (min + sec), mola süresi, sayaç görünürlüğü
+- 🔄 **Otomatik döngü** — Mola sonrası otomatik yeniden başlatma
+- ⏯️ **Basit kontroller** — Başlat, Durdur, Ayarlar, Çıkış
+- 🔊 **Ses bildirimi** — Mola başında ve sonunda ses çalar
+- 🚀 **Bilgisayar açılışında otomatik başlatma** — Login Items desteği
+- 🌍 **Çoklu dil desteği** — Türkçe ve İngilizce (easy_localization)
+- 🛑 **Mola penceresinden durdurma** — Timer'ı mola ekranından komple durdurabilme
 
 ---
 
 ## 🖼️ Ekran Görüntüleri
 
-### Menü Çubuğu
+### Menü Çubuğu (Çalışırken)
+```
+ 👁️ ⏱ 18:45
+┌─────────────────────┐
+│  ⏹️ Stop             │
+│  ─────────────────── │
+│  ⚙️ Settings         │
+│  ─────────────────── │
+│  ❌ Exit             │
+└─────────────────────┘
+```
+
+### Mola Ekranı
 ```
 ┌─────────────────────────────────┐
-│  👁️ ▼                          │
-├─────────────────────────────────┤
-│  💼 Çalışıyor: 18:45            │
-│  ─────────────────────          │
-│  ⏹️ Durdur                      │
-│  ─────────────────────          │
-│  ❌ Çıkış                       │
+│                                 │
+│         👁️ (animasyonlu)        │
+│                                 │
+│     Time for an Eye Break!      │
+│   Look at something 20 feet     │
+│     (6 meters) away             │
+│                                 │
+│          00:15                  │
+│     ███████████████░░░░░        │
+│                                 │
+│  [🛑 Stop Timer]  [⏭ Skip]     │
+│                                 │
 └─────────────────────────────────┘
 ```
 
-### Bildirim
+### Ayarlar Ekranı
 ```
 ┌─────────────────────────────────┐
-│  Göz Molası Zamanı! 👁️          │
-│  20 saniye boyunca 6 metre      │
-│  uzağa bakın.                   │
+│  ✕  ⚙️ Settings                 │
+│                                 │
+│  💼 Work Duration               │
+│     ⊖ 1 min ⊕   ⊖ 0 sec ⊕    │
+│                                 │
+│  👁️ Break Duration              │
+│     ⊖ 20 sec ⊕                 │
+│                                 │
+│  🕐 Show Counter        [ON]   │
+│  🚀 Launch at Login     [OFF]  │
+│                                 │
+│     [ Save & Close ]            │
 └─────────────────────────────────┘
 ```
 
@@ -66,8 +98,14 @@ lib/
 ├── core/                        # Çekirdek katman
 │   ├── constants/
 │   │   └── app_constants.dart   # Sabitler (süreler, metinler)
-│   └── error/
-│       └── failures.dart        # Hata sınıfları
+│   ├── error/
+│   │   └── failures.dart        # Hata sınıfları
+│   ├── localization/
+│   │   ├── locale_keys.dart     # Çeviri anahtarları
+│   │   └── localization_service.dart  # Çeviri servisi
+│   └── services/
+│       ├── auto_launch_service.dart   # macOS Login Items yönetimi
+│       └── window_service.dart        # Pencere gösterme/gizleme
 │
 ├── domain/                      # İş mantığı katmanı
 │   ├── entities/
@@ -82,7 +120,7 @@ lib/
 │
 ├── data/                        # Veri katmanı
 │   └── repositories/
-│       ├── notification_repository_impl.dart  # osascript ile bildirim
+│       ├── notification_repository_impl.dart  # Bildirim implementasyonu
 │       └── timer_repository_impl.dart         # Stream.periodic timer
 │
 └── presentation/                # Sunum katmanı
@@ -90,6 +128,9 @@ lib/
     │   ├── eye_care_bloc.dart   # Ana BLoC
     │   ├── eye_care_event.dart  # BLoC olayları
     │   └── eye_care_state.dart  # BLoC durumları
+    ├── screens/
+    │   ├── break_screen.dart    # Tam ekran mola penceresi
+    │   └── settings_screen.dart # Ayarlar ekranı
     └── tray/
         └── tray_manager_service.dart  # System Tray yönetimi
 ```
@@ -99,16 +140,22 @@ lib/
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                      PRESENTATION                           │
-│  ┌─────────────────┐      ┌─────────────────────────────┐  │
-│  │  TrayManager    │◄────►│       EyeCareBloc           │  │
-│  │    Service      │      │  (flutter_bloc)             │  │
-│  └─────────────────┘      └──────────────┬──────────────┘  │
-└──────────────────────────────────────────┼─────────────────┘
-                                           │
-┌──────────────────────────────────────────┼─────────────────┐
-│                       DOMAIN             │                  │
-│  ┌────────────────┐  ┌───────────────┐  │                  │
-│  │ TimerSession   │  │   UseCases    │◄─┘                  │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
+│  │ TrayManager  │  │ BreakScreen  │  │ SettingsScreen   │  │
+│  │   Service    │  │              │  │                  │  │
+│  └──────┬───────┘  └──────┬───────┘  └────────┬─────────┘  │
+│         │                 │                    │            │
+│         ▼                 ▼                    ▼            │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │                  EyeCareBloc                        │   │
+│  │                (flutter_bloc)                       │   │
+│  └──────────────────────┬──────────────────────────────┘   │
+└─────────────────────────┼──────────────────────────────────┘
+                          │
+┌─────────────────────────┼──────────────────────────────────┐
+│                  DOMAIN  │                                  │
+│  ┌────────────────┐  ┌───┴───────────┐                     │
+│  │ TimerSession   │  │   UseCases    │                     │
 │  │   (Entity)     │  │               │                     │
 │  └────────────────┘  └───────┬───────┘                     │
 │                              │                              │
@@ -127,6 +174,11 @@ lib/
 │  │     (osascript)              │   (Stream.periodic)   │    │
 │  └─────────────────────────────────────────────────────┘    │
 └──────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────┐
+│                     CORE SERVICES                            │
+│  WindowService  │  AutoLaunchService  │  LocalizationService │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -138,7 +190,10 @@ lib/
 | `flutter_bloc` | ^9.1.1 | State management |
 | `get_it` | ^9.2.0 | Dependency injection |
 | `tray_manager` | ^0.5.2 | macOS system tray |
-| `equatable` | ^2.0.7 | Value equality |
+| `window_manager` | ^0.4.3 | Pencere yönetimi (mola/ayar ekranları) |
+| `shared_preferences` | ^2.5.4 | Ayarların kalıcı saklanması |
+| `easy_localization` | ^3.0.8 | Çoklu dil desteği (TR/EN) |
+| `equatable` | ^2.0.8 | Value equality |
 
 ---
 
@@ -183,15 +238,26 @@ open build/macos/Build/Products/Release/eyecare_mac.app
 
 ## 📖 Kullanım
 
-1. **Uygulamayı başlatın** - Menü çubuğunda göz ikonu görünecek
-2. **İkona tıklayın** - Bağlam menüsü açılır
-3. **"Başlat"** - 20 dakikalık geri sayım başlar
-4. **Çalışın** - Menüden kalan süreyi takip edebilirsiniz
-5. **Mola zamanı** - 20 dakika sonunda bildirim alırsınız
-6. **Mola verin** - 20 saniye uzaklara bakın
-7. **Otomatik devam** - Mola sonunda yeni döngü başlar
-8. **"Durdur"** - Timer'ı istediğiniz zaman durdurun
-9. **"Çıkış"** - Uygulamayı kapatın
+1. **Uygulamayı başlatın** — Menü çubuğunda göz ikonu görünecek
+2. **İkona tıklayın** — Bağlam menüsü açılır
+3. **"Start"** — Geri sayım başlar, menü çubuğunda süre görünür
+4. **Çalışın** — Menü çubuğunda `⏱ 19:45` gibi kalan süre anlık güncellenir
+5. **Mola zamanı** — Süre dolduğunda tam ekran mola penceresi açılır
+6. **Mola verin** — 20 saniye (veya ayarladığınız süre) boyunca uzaklara bakın
+7. **Otomatik devam** — Mola sonunda ses çalar ve yeni döngü başlar
+8. **"Stop"** — Timer'ı istediğiniz zaman menüden veya mola penceresinden durdurun
+9. **"Settings"** — Çalışma/mola sürelerini, sayaç görünürlüğünü ve otomatik başlatmayı ayarlayın
+10. **"Exit"** — Uygulamayı kapatın
+
+### ⚙️ Ayarlar
+
+| Ayar | Açıklama | Varsayılan |
+|------|----------|------------|
+| Work Duration (min) | Çalışma süresi — dakika | 20 min |
+| Work Duration (sec) | Çalışma süresi — ek saniye (10'ar adım) | 0 sec |
+| Break Duration | Mola süresi | 20 sec |
+| Show Counter | Menü çubuğunda geri sayımı göster/gizle | Açık |
+| Launch at Login | Bilgisayar açılışında otomatik başlat | Kapalı |
 
 ---
 
@@ -233,9 +299,10 @@ Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICE
 
 ## 🙏 Teşekkürler
 
-- [20-20-20 Rule](https://www.aao.org/eye-health/tips-prevention/computer-usage) - American Academy of Ophthalmology
-- [Flutter](https://flutter.dev) - UI toolkit
-- [tray_manager](https://pub.dev/packages/tray_manager) - System tray paketi
+- [20-20-20 Rule](https://www.aao.org/eye-health/tips-prevention/computer-usage) — American Academy of Ophthalmology
+- [Flutter](https://flutter.dev) — UI toolkit
+- [tray_manager](https://pub.dev/packages/tray_manager) — System tray paketi
+- [window_manager](https://pub.dev/packages/window_manager) — Pencere yönetimi paketi
 
 ---
 

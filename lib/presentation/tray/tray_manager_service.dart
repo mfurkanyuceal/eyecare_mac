@@ -1,10 +1,12 @@
 import 'dart:io';
 
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tray_manager/tray_manager.dart';
 
 import '../../core/localization/locale_keys.dart';
 import '../../core/localization/localization_service.dart';
 import '../../domain/entities/timer_session.dart';
+import '../../main.dart';
 import '../bloc/eye_care_bloc.dart';
 import '../bloc/eye_care_event.dart';
 
@@ -18,8 +20,10 @@ class TrayManagerService with TrayListener {
 
   static const String _menuIdStart = 'start';
   static const String _menuIdStop = 'stop';
-  static const String _menuIdStatus = 'status';
+  static const String _menuIdSettings = 'settings';
   static const String _menuIdExit = 'exit';
+
+  TimerPhase _lastPhase = TimerPhase.idle;
 
   TrayManagerService(this._bloc, this._localizationService);
 
@@ -34,62 +38,78 @@ class TrayManagerService with TrayListener {
     await _setTrayIcon();
 
     // Set up initial menu
-    await _updateMenu(_bloc.state.session);
+    await _rebuildMenu(_bloc.state.session);
 
-    // Listen to BLoC state changes for menu updates
+    // Listen to BLoC state changes
     _bloc.stream.listen((state) {
-      _updateMenu(state.session);
+      final session = state.session;
+      // Always update the tray title (every tick)
+      _updateTitle(session);
+      // Only rebuild the menu when the phase changes (idle<->working<->breaking)
+      if (session.phase != _lastPhase) {
+        _lastPhase = session.phase;
+        _rebuildMenu(session);
+      }
     });
   }
 
   /// Sets the tray icon
   Future<void> _setTrayIcon() async {
-    // Try to use a bundled icon, fallback to template icon
-    try {
-      // Use a simple approach - set icon from path
-      // For macOS, we'll create a simple icon
-      if (Platform.isMacOS) {
-        // macOS supports template images (will auto-adapt to menu bar color)
-        await trayManager.setIcon(
-          'assets/icons/tray_icon.png',
-          isTemplate: true,
-        );
+    if (Platform.isMacOS) {
+      // Get the app bundle path for macOS
+      final executable = Platform.resolvedExecutable;
+      // Remove /Contents/MacOS/eyecare_mac or /Contents/MacOS/Runner
+      final bundlePath = executable.substring(
+        0,
+        executable.lastIndexOf('/Contents/MacOS/'),
+      );
+      final iconPath =
+          '$bundlePath/Contents/Frameworks/App.framework/Resources/flutter_assets/assets/icons/tray_icon.png';
+
+      print('DEBUG: Icon path = $iconPath');
+      print('DEBUG: File exists = ${await File(iconPath).exists()}');
+
+      if (await File(iconPath).exists()) {
+        await trayManager.setIcon(iconPath, isTemplate: true);
+        print('DEBUG: Icon set successfully');
+      } else {
+        // Fallback to emoji
+        await trayManager.setTitle('👁');
+        print('DEBUG: Using emoji fallback');
       }
-    } catch (e) {
-      // If icon loading fails, the tray will still work but without icon
-      // In production, you'd want to handle this more gracefully
     }
   }
 
-  /// Updates the tray context menu based on current state
-  Future<void> _updateMenu(TimerSession session) async {
-    final List<MenuItem> menuItems = [];
+  /// Updates only the tray title text (called every tick)
+  Future<void> _updateTitle(TimerSession session) async {
+    // Check if counter should be shown
+    final prefs = await SharedPreferences.getInstance();
+    final showCounter = prefs.getBool('show_counter') ?? true;
 
-    // Status item (disabled, shows current state)
-    String statusText;
-    switch (session.phase) {
-      case TimerPhase.idle:
-        statusText = _localizationService.tr(LocaleKeys.statusIdle);
-        break;
-      case TimerPhase.working:
-        statusText = _localizationService.tr(
-          LocaleKeys.statusWorking,
-          args: {'time': session.formattedTime},
-        );
-        break;
-      case TimerPhase.breaking:
-        statusText = _localizationService.tr(
-          LocaleKeys.statusBreaking,
-          args: {'time': session.formattedTime},
-        );
-        break;
+    if (!showCounter) {
+      await trayManager.setTitle('');
+      return;
     }
 
-    menuItems.add(
-      MenuItem(key: _menuIdStatus, label: statusText, disabled: true),
-    );
+    switch (session.phase) {
+      case TimerPhase.idle:
+        await trayManager.setTitle('');
+        break;
+      case TimerPhase.working:
+        await trayManager.setTitle('⏱ ${session.formattedTime}');
+        break;
+      case TimerPhase.breaking:
+        await trayManager.setTitle('😌 ${session.formattedTime}');
+        break;
+    }
+  }
 
-    menuItems.add(MenuItem.separator());
+  /// Rebuilds the tray context menu (called only when phase changes)
+  Future<void> _rebuildMenu(TimerSession session) async {
+    final List<MenuItem> menuItems = [];
+
+    // Update title too
+    await _updateTitle(session);
 
     // Start/Stop based on state
     if (session.phase == TimerPhase.idle) {
@@ -107,6 +127,11 @@ class TrayManagerService with TrayListener {
         ),
       );
     }
+
+    menuItems.add(MenuItem.separator());
+
+    // Settings
+    menuItems.add(MenuItem(key: _menuIdSettings, label: '⚙️ Settings'));
 
     menuItems.add(MenuItem.separator());
 
@@ -136,11 +161,15 @@ class TrayManagerService with TrayListener {
 
   @override
   void onTrayMenuItemClick(MenuItem menuItem) {
+    print('DEBUG: Menu item clicked: ${menuItem.key}');
     switch (menuItem.key) {
       case _menuIdStart:
         _bloc.add(const StartTimerEvent());
       case _menuIdStop:
+        print('DEBUG: Adding StopTimerEvent to BLoC');
         _bloc.add(const StopTimerEvent());
+      case _menuIdSettings:
+        showSettingsCallback?.call();
       case _menuIdExit:
         _dispose();
         exit(0);
